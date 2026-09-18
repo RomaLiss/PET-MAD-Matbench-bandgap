@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bandgap"
+version = "1.0.0"
+description = "Предсказание ширины запрещённой зоны поверх энкодера PET-MAD"
+requires-python = ">=3.10"
+
+# ВНИМАНИЕ НА ВЕРСИЮ upet — от неё зависит, загрузятся ли веса вообще.
+#
+# В upet 0.3.0 внутри модели появился промежуточный уровень `backend`, и все
+# имена параметров энкодера сдвинулись: `model.gnn_layers...` стало
+# `model.backend.gnn_layers...`. Веса, обученные с 0.1.2, в такую модель не
+# ложатся — проверено на чистой установке: не хватает 143 параметров, лишних
+# 137, совпадает 33 из 176.
+#
+# Ошибки при этом не будет понятной: человек просто увидит сообщение про
+# несовпадение архитектуры и не догадается, что дело в версии пакета.
+#
+# metatrain здесь не указан намеренно: upet 0.1.2 сам требует metatrain==2026.1,
+# и указывать это второй раз значит создать второе место, где придётся помнить
+# про совместимость.
+dependencies = [
+    "upet==0.1.2",
+    "metatomic",
+    "vesin",
+    "ase",
+    "numpy",
+    "tqdm",
+    "pyyaml",
+]
+
+# Дополнительно для обучения. Предсказанию эти пакеты не нужны:
+#     pip install -e ".[train]"
+[project.optional-dependencies]
+train = [
+    "matbench",
+    "pymatgen",
+    "scikit-learn",
+    "matplotlib",
+]
+
+[tool.setuptools]
+packages = ["bandgap"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["runs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "UP", "SIM", "I"]
+ignore = [
+    "E501",   # длинные строки: развёрнутые пояснения важнее ширины
+    "E741",   # неоднозначное имя переменной (l)
+    "SIM108", # тернарный оператор: явный if/else читается лучше
+]
+
+[tool.ruff.lint.per-file-ignores]
+"experiments/*" = ["E402"]  # переменные окружения обязаны быть заданы ДО
+                            # импорта torch: библиотеки читают их при загрузке
