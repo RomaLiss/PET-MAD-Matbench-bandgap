@@ -1,0 +1,67 @@
+seed: 42
+hardware:
+  device: cuda
+  cuda_visible_devices: 1
+  num_workers: 12
+  vesin_max_pairs: 1024
+  expandable_segments: true
+paths:
+  runs_root: runs
+  cache_root: cache
+  results_file: matbench_mp_gap_results.json.gz
+cache:
+  enabled: true
+  filename: mp_gap_petmad_s_1.5.0_fp16.pt
+  dtype: float16
+  device: cuda
+  build_batch_size: 64
+  amp: true
+data:
+  task: matbench_mp_gap
+  n_folds: 5
+  val_fraction: 0.1
+  split_seed: 42
+model:
+  encoder_name: pet-mad
+  encoder_size: s
+  encoder_version: 1.5.0
+  input_dim: 1280
+  dropout_rate: 0.1
+  pooling_variant: fixed
+train:
+  batch_size: 128
+  loss: HuberLoss
+  huber_delta: 0.3
+  amp: true
+  selection_metric: mae
+  shuffle_train: true
+stages:
+  s1:
+    epochs: 150
+    lr_head: 0.0003
+    lr_factor: 0.75
+    lr_patience: 10
+    clip_grad: null
+    save_last: false
+    early_stop_patience: null
+  s2:
+    epochs: 100
+    lr_head: 0.0001
+    lr_body_coef: 5
+    lr_factor: 0.75
+    lr_patience: 10
+    clip_grad: 1.0
+    save_last: true
+    early_stop_patience: null
+    weight_decay: 0.0001
+    weight_decay_encoder: 0.0
+    exclude_norms_bias: false
+    l2sp_lambda: null
+test:
+  batch_size: 64
+  amp: true
+submission:
+  algorithm: PET-MAD + attention pooling + MLP head
+  notes: (work in progress)
+diagnostics:
+  enabled: true

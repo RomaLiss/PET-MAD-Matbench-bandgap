@@ -1,0 +1,90 @@
+# Конфигурация обучения на Matbench mp_gap.
+#
+# Любой параметр меняется из командной строки, без правки файла:
+#     python3 experiments/matbench_mp_gap.py --set stages.s2.epochs=100
+
+seed: 42
+
+hardware:
+  device: cuda
+  cuda_visible_devices: 0        # используемая видеокарта (у меня на сервере 1)
+  num_workers: 4                 # (у меня на сервере 12)
+                                 
+  vesin_max_pairs: 1024          # лимит соседей на атом в библиотеке поиска соседей
+                                           
+  expandable_segments: true      # режим аллокатора CUDA против фрагментации.
+                                 # Без него вторая стадия удерживает \sim 22 ГБ из
+                                 # 24 при реальном потреблении \sim 14 ГБ, и прогон падает.
+                                 
+                                 
+
+paths:
+  runs_root: runs
+  cache_root: cache
+  results_file: matbench_mp_gap_results.json.gz
+
+cache:
+
+  enabled: true
+  filename: mp_gap_petmad_s_1.5.0_fp16.pt
+  dtype: float16       
+
+  device: cuda         
+                       
+  build_batch_size: 64
+  amp: true
+
+data:
+  task: matbench_mp_gap
+  n_folds: 5
+  val_fraction: 0.1              
+  split_seed: 42
+
+model:
+  encoder_name: pet-mad
+  encoder_size: s
+  encoder_version: "1.5.0"
+  input_dim: 1280                
+  dropout_rate: 0.1
+
+train:
+  batch_size: 128
+  loss: HuberLoss                # HuberLoss или MSELoss. 
+  huber_delta: 0.3               # 0.1 и 0.3 дают одинаково, 1.0 заметно хуже
+  amp: true
+  selection_metric: mae          # mae показала себя лучше rmse 
+  shuffle_train: true            
+                                 
+
+stages:
+  s1:                            # энкодер заморожен, учится только голова
+    epochs: 150                  
+    lr_head: 3.0e-4
+    lr_factor: 0.75              
+    lr_patience: 10
+    clip_grad: null              # не нужно: энкодер заморожен, учится голова
+    save_last: false
+  s2:                            # дообучение целиком
+    epochs: 60                   
+    lr_head: 1.0e-4              
+    lr_body_coef: 5              # шаг энкодера = lr_head / это число. Тело
+                                 # учится медленнее головы: энкодер уже обучен, голова — нет
+    lr_factor: 0.75
+    lr_patience: 10
+    clip_grad: 1.0
+    save_last: true
+    weight_decay: 1.0e-4         # для головы и слоя внимания
+    weight_decay_encoder: 0.0    # для энкодера
+
+test:
+  batch_size: 64
+  amp: true                      
+
+submission:
+  algorithm: PET-MAD + attention pooling + MLP head
+  notes: >-
+    (work in progress)
+
+diagnostics:
+  enabled: true                  # журнал изменения весов энкодера по слоям.
+  
