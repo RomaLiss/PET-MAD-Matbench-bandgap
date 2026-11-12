@@ -28,7 +28,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 
 #: Конфигурация задаёт АРХИТЕКТУРУ — размер энкодера, размерность признаков.
 DEFAULT_CONFIG = os.path.join(_HERE, "..", "model", "train_config.yaml")
-DEFAULT_CHECKPOINT = os.path.join(_HERE, "..", "model", "fold_0_best_S2_mae.pth")
+DEFAULT_CHECKPOINT = os.path.join(_HERE, "..", "model", "matbench_pbe_v1.pth")
 
 
 class BandgapPredictor:

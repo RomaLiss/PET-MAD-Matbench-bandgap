@@ -21,7 +21,7 @@ experiments/
 tools/predict.py    предсказание из командной строки
 
 model/
-  fold_0_best_S2_mae.pth   обученные веса, 115 МБ
+  matbench_pbe_v1.pth      обученные веса, 115 МБ
   train_config.yaml        конфигурация прогона, которым обучены веса
 
 Быстрое предсказание
