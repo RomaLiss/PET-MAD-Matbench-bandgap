@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bandgap"
-version = "1.0.0"
+version = "2.0.0"
 description = "Предсказание ширины запрещённой зоны поверх энкодера PET-MAD"
 requires-python = ">=3.10"
 
